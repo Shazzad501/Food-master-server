@@ -31,7 +31,8 @@ async function run() {
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     const menuCollection = client.db("foodMasterDB").collection('menu');
-    const reviewCollection = client.db("fooMasterDB").collection('review');
+    const reviewCollection = client.db("foodMasterDB").collection('review');
+    const cartCollection = client.db("foodMasterDB").collection('cart');
 
 
     // get all menu into db
@@ -40,10 +41,18 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/reviews', async(req, res)=>{
+    // get all reviews into the db
+    app.get('/review', async(req, res)=>{
       const result = await reviewCollection.find().toArray();
       res.send(result);
     });
+
+    // post a cart into the db
+    app.post('/carts', async(req, res)=>{
+      const cartItem = req.body;
+      const result = await cartCollection.insertOne(cartItem);
+      res.send(result);
+    })
 
   } finally {
     // Ensures that the client will close when you finish/error
