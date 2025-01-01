@@ -53,6 +53,13 @@ async function run() {
       const result = await cartCollection.insertOne(cartItem);
       res.send(result);
     })
+    // get all cart into the db
+    app.get('/carts', async(req, res)=>{
+      const email = req.query.email;
+      const query = {userEmail: email}
+      const result = await cartCollection.find(query).toArray();
+      res.send(result);
+    })
 
   } finally {
     // Ensures that the client will close when you finish/error
