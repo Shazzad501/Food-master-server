@@ -39,6 +39,12 @@ async function run() {
     // user info post api
     app.post('/users', async(req, res)=>{
       const user = req.body;
+      // save user if user doesn't existed
+      const query = {email: user.email}
+      const exitedUser = await usersCollection.findOne(query)
+      if(exitedUser){
+        return res.send({message: 'user all ready save.', insertedId: null})
+      }
       const result = await usersCollection.insertOne(user);
       res.send(result)
     })
