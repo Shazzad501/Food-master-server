@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const port = process.env.PORT || 5000;
 
@@ -30,9 +30,18 @@ async function run() {
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
+    const usersCollection = client.db("foodMasterDB").collection('users');
     const menuCollection = client.db("foodMasterDB").collection('menu');
     const reviewCollection = client.db("foodMasterDB").collection('review');
     const cartCollection = client.db("foodMasterDB").collection('cart');
+
+    // user related api 
+    // user info post api
+    app.post('/users', async(req, res)=>{
+      const user = req.body;
+      const result = await usersCollection.insertOne(user);
+      res.send(result)
+    })
 
 
     // get all menu into db
@@ -61,6 +70,14 @@ async function run() {
       res.send(result);
     })
 
+    // delete a cart with id
+    app.delete('/carts/:id', async(req, res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await cartCollection.deleteOne(query);
+      res.send(result);
+    })
+
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -70,8 +87,8 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res)=>{
-  res.send("Food Master here!!")
-})
+  res.send("Food Master here!!");
+});
 
 app.listen(port, ()=>{
   console.log(`Food Create on port: ${port}`)
