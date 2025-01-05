@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const jwt = require('jsonwebtoken')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const port = process.env.PORT || 5000;
@@ -35,6 +36,31 @@ async function run() {
     const reviewCollection = client.db("foodMasterDB").collection('review');
     const cartCollection = client.db("foodMasterDB").collection('cart');
 
+
+    // jwt token related api
+    app.post('/jwt', async(req, res)=>{
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '2h'});
+      res.send({token})
+    })
+
+    // verify jwt token
+    const verifyToken = (req, res, next)=>{
+      console.log('Inside verify token',req.headers.authorization)
+      if(!req.headers.authorization){
+        return res.status(401).send({message: 'Forbidden Access'})
+      }
+      const token = req.headers.authorization.split(' ')[1];
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) =>{
+        if(err){
+          return res.status(401).send({message: 'Forbidden Access'})
+        }
+        req.decoded = decoded;
+        next()
+      })
+      // next()
+    }
+
     // user related api 
     // user info post api
     app.post('/users', async(req, res)=>{
@@ -63,7 +89,7 @@ async function run() {
     })
 
     // get all user
-    app.get('/users', async(req, res)=>{
+    app.get('/users', verifyToken, async(req, res)=>{
       const result = await usersCollection.find().toArray()
       res.send(result);
     })
