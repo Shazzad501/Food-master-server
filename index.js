@@ -61,6 +61,18 @@ async function run() {
       // next()
     }
 
+    // verify admin token 
+    const verifyAdmin = async(req, res, next)=>{
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const isAdmin = user?.role === 'admin';
+      if(!isAdmin){
+        return res.status(403).send({message: 'Forbidden Accesss'})
+      }
+      next();
+    }
+
     // user related api 
     // user info post api
     app.post('/users', async(req, res)=>{
@@ -76,7 +88,7 @@ async function run() {
     })
     
     // user data update api or make a user in admin
-    app.patch('/users/admin/:id', async(req, res)=>{
+    app.patch('/users/admin/:id', verifyToken, verifyAdmin, async(req, res)=>{
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)}
       const updatedDoc={
@@ -89,7 +101,7 @@ async function run() {
     })
 
     // get a user by check is admin
-    app.get('/users/admin/:email',verifyToken, async(req, res)=>{
+    app.get('/users/admin/:email', verifyToken, async(req, res)=>{
       const email = req.params.email;
       if(email !== req.decoded.email){
         return res.status(403).send({message: 'Forbidden Access'})
@@ -105,13 +117,13 @@ async function run() {
     })
 
     // get all user
-    app.get('/users', verifyToken, async(req, res)=>{
+    app.get('/users', verifyToken, verifyAdmin, async(req, res)=>{
       const result = await usersCollection.find().toArray()
       res.send(result);
     })
 
     // delete a user by id
-    app.delete('/users/:id', async(req, res)=>{
+    app.delete('/users/:id', verifyToken, verifyAdmin, async(req, res)=>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
       const result = await usersCollection.deleteOne(query);
