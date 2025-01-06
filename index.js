@@ -130,6 +130,13 @@ async function run() {
       res.send(result);
     })
 
+    // post a menu item into db
+    app.post('/menu',verifyToken, verifyAdmin, async(req, res)=>{
+      const item = req.body;
+      const result = await menuCollection.insertOne(item);
+      res.send(result)
+    })
+
     // get all menu into db
     app.get('/menu', async(req, res)=>{
       const result = await menuCollection.find().toArray();
