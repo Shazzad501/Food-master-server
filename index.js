@@ -213,7 +213,12 @@ async function run() {
       })
     })
 
-    
+    // save payment in db
+    app.post('/payments', async(req, res)=>{
+      const payment = req.body;
+      const paymetResult = await paymentCollection.insertOne(payment);
+      res.send(paymetResult);
+    })
 
   } finally {
     // Ensures that the client will close when you finish/error
