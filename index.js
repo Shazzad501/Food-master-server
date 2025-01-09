@@ -1,15 +1,15 @@
+require('dotenv').config()
 const express = require('express');
 const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-require('dotenv').config()
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 const port = process.env.PORT || 5000;
 
 // middle weres
 app.use(cors());
 app.use(express.json());
-
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.wlddb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -35,6 +35,7 @@ async function run() {
     const menuCollection = client.db("foodMasterDB").collection('menu');
     const reviewCollection = client.db("foodMasterDB").collection('review');
     const cartCollection = client.db("foodMasterDB").collection('cart');
+    const paymentCollection = client.db("foodMasterDB").collection('payments');
 
 
     // jwt token related api
@@ -196,6 +197,23 @@ async function run() {
       const result = await cartCollection.deleteOne(query);
       res.send(result);
     })
+
+    // paymet related api
+    app.post('/create-payment-intent', async(req, res)=>{
+      const {price} = req.body;
+      const amount = parseInt(price * 100)
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    })
+
+    
 
   } finally {
     // Ensures that the client will close when you finish/error
