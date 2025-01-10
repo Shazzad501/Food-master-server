@@ -226,6 +226,17 @@ async function run() {
       res.send({paymetResult, deleteResult});
     })
 
+    // get all paymet get by user email
+    app.get('/payments/:email', verifyToken, async(req, res)=>{
+      const email = req.params.email;
+      const query = {email : email}
+      if(email !== req.decoded.email){
+        return res.status(403).send({message: 'Forbidden Access'})
+      }
+      const result = await paymentCollection.find(query).toArray()
+      res.send(result)
+    })
+
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
